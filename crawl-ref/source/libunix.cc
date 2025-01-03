@@ -52,7 +52,7 @@ static struct termios game_term;
 #include <time.h>
 
 #ifdef __COSMOPOLITAN__
-#include <dce.h>
+#include <libc/dce.h>
 #endif
 
 // replace definitions from curses.h; not needed outside this file
