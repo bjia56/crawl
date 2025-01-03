@@ -51,6 +51,10 @@ static struct termios game_term;
 
 #include <time.h>
 
+#ifdef __COSMOPOLITAN__
+#include <dce.h>
+#endif
+
 // replace definitions from curses.h; not needed outside this file
 #define HEADLESS_LINES 24
 #define HEADLESS_COLS 80
@@ -813,6 +817,25 @@ static void _headless_startup()
 #endif
 }
 
+#ifdef __COSMOPOLITAN__
+static void _cosmo_windows_check_screen_resize()
+{
+    static struct winsize prev;
+    struct winsize w;
+
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) == -1) {
+        perror("ioctl");
+        return;
+    }
+
+    if (prev.ws_row != w.ws_row || prev.ws_col != w.ws_col) {
+        unix_handle_resize_event();
+    }
+
+    prev = w;
+}
+#endif
+
 void console_startup()
 {
     if (_headless_mode)
@@ -834,6 +857,11 @@ void console_startup()
 #ifdef USE_UNIX_SIGNALS
 # ifndef KEY_RESIZE
     signal(SIGWINCH, unix_handle_resize_event);
+# endif
+# ifdef __COSMOPOLITAN__
+    if (IsWindows()) {
+        crawl_state.terminal_resize_check = _cosmo_windows_check_screen_resize;
+    }
 # endif
 #endif
 
